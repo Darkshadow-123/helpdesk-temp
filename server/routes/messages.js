@@ -1,6 +1,7 @@
 import express from 'express';
 import Message from '../models/MessageModel.js';
 import Ticket from '../models/Ticket.js';
+import User from '../models/User.js';
 import { auth } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -23,22 +24,40 @@ router.get('/ticket/:ticketId', auth, async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const { ticketId, text, isPrivate } = req.body;
+    let { ticketId, text, isPrivate } = req.body;
+    
+    console.log('=== Message request ===');
+    console.log('Body:', req.body);
+    console.log('isPrivate:', isPrivate, 'type:', typeof isPrivate);
+    console.log('text:', text);
+    
+    if (!ticketId || !text) {
+      return res.status(400).json({ error: 'ticketId and text are required' });
+    }
+    
+    if (typeof isPrivate === 'string') {
+      isPrivate = isPrivate === 'true';
+    }
+    isPrivate = Boolean(isPrivate);
+    
+    console.log('Processed isPrivate:', isPrivate);
 
     const ticket = await Ticket.findById(ticketId);
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
+    const user = await User.findById(req.user.id);
+    
     const message = new Message({
       ticketId,
-      senderId: req.user.id,
+      senderId: user._id,
       senderType: 'agent',
-      senderName: req.user.name,
-      senderInitials: req.user.initials,
-      senderColor: req.user.color,
+      senderName: user.name,
+      senderInitials: user.initials || user.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U',
+      senderColor: user.color || '#6366F1',
       text,
-      isPrivate: isPrivate || false
+      isPrivate: Boolean(isPrivate)
     });
 
     await message.save();

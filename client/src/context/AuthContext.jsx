@@ -31,6 +31,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     ApiService.setToken(null);
     setUser(null);
+    window.location.href = '/login';
   };
 
   return (

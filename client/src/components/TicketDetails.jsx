@@ -13,7 +13,9 @@ function formatDate(dateString) {
 }
 
 function formatTime(dateString) {
+  if (!dateString) return '';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
   return date.toLocaleTimeString('en-US', { 
     hour: 'numeric', 
     minute: '2-digit'
@@ -45,23 +47,23 @@ export default function TicketDetails({ ticket, onUpdateTicket, onSendMessage })
 
   const handleStatusChange = (newStatus) => {
     setStatus(newStatus);
-    onUpdateTicket(ticket.id, { status: newStatus });
+    onUpdateTicket(ticket._id, { status: newStatus });
   };
 
   const handlePriorityChange = (newPriority) => {
     setPriority(newPriority);
-    onUpdateTicket(ticket.id, { priority: newPriority });
+    onUpdateTicket(ticket._id, { priority: newPriority });
   };
 
   const handleSend = (messageText, isPrivate) => {
-    onSendMessage(ticket.id, messageText, isPrivate);
+    onSendMessage(messageText, isPrivate);
   };
 
   return (
     <div className="ticket-details-panel">
       <div className="ticket-details-header">
         <div className="ticket-header-top">
-          <span className="ticket-id">{ticket.id}</span>
+          <span className="ticket-id">{ticket.ticketNumber || ticket._id}</span>
           <div className="ticket-actions">
             <button className="btn btn-secondary">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -70,7 +72,7 @@ export default function TicketDetails({ ticket, onUpdateTicket, onSendMessage })
               </svg>
               Email
             </button>
-            <button className="btn btn-primary">
+            <button className="btn btn-primary" onClick={() => handleStatusChange('solved')}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
@@ -176,9 +178,9 @@ export default function TicketDetails({ ticket, onUpdateTicket, onSendMessage })
             <p>No {activeTab} messages yet</p>
           </div>
         ) : (
-          displayedMessages.map(message => (
+        displayedMessages.map(message => (
             <div 
-              key={message.id} 
+              key={message._id || message.id} 
               className={`message ${message.type} ${message.isPrivate ? 'private' : ''}`}
             >
               <div className="message-avatar" style={{ background: message.color }}>
@@ -195,8 +197,8 @@ export default function TicketDetails({ ticket, onUpdateTicket, onSendMessage })
                   </div>
                 )}
                 <div className="message-header">
-                  <span className="message-sender">{message.sender}</span>
-                  <span className="message-time">{formatTime(message.timestamp)}</span>
+                  <span className="message-sender">{message.senderName}</span>
+                  <span className="message-time">{formatTime(message.createdAt)}</span>
                 </div>
                 <div className="message-text">
                   <p>{message.text}</p>

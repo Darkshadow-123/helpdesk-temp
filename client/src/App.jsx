@@ -20,7 +20,7 @@ function Dashboard() {
 
   useEffect(() => {
     loadTickets();
-  }, [filter, searchQuery]);
+  }, [filter, searchQuery, activeNav, user]);
 
   const loadTickets = async () => {
     try {
@@ -28,6 +28,7 @@ function Dashboard() {
       const params = {};
       if (filter !== 'All') params.status = filter;
       if (searchQuery) params.search = searchQuery;
+      if (activeNav === 'my-tickets' && user) params.assignee = user.id;
       
       const data = await ApiService.tickets.getAll(params);
       setTickets(data);
@@ -62,6 +63,8 @@ function Dashboard() {
 
   const handleSendMessage = async (messageText, isPrivate) => {
     if (!selectedTicket) return;
+    
+    console.log('Sending message:', { ticketId: selectedTicket._id, text: messageText, isPrivate });
     
     try {
       const newMessage = await ApiService.messages.create({
